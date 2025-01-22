@@ -44,12 +44,12 @@ export default function Home() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div style={{ padding: '20px' }}>
+      <div className='p-20'>
         <h1>Trello-like To-Do List</h1>
         <button onClick={addStage} style={{ marginBottom: '20px' }}>
           Add Stage
         </button>
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div className="flex gap-2.5">
           {stages.map((stage) => (
             <Stage
               key={stage}

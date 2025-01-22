@@ -1,11 +1,13 @@
+
+"use client";
 import React, { useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import Stage from './components/Stage';
+import Stage from '@/components/Stage';
 
-const App = () => {
+export default function Home() {
   const [stages, setStages] = useState(['To Do', 'Doing', 'Done']);
-  const [tasks, setTasks] = useState({
+  const [tasks, setTasks] = useState<{ [key: string]: { id: number; name: string }[] }>({
     'To Do': [{ id: 1, name: 'Task 1' }, { id: 2, name: 'Task 2' }],
     Doing: [],
     Done: [],
@@ -19,7 +21,7 @@ const App = () => {
     }
   };
 
-  const addTask = (stage) => {
+  const addTask = (stage: string) => {
     const taskName = prompt(`Enter a task for ${stage}:`);
     if (taskName) {
       const newTask = { id: Date.now(), name: taskName };
@@ -27,7 +29,7 @@ const App = () => {
     }
   };
 
-  const moveTask = (task, fromStage, toStage) => {
+  const moveTask = (task: { id: number; name: string }, fromStage: string, toStage: string) => {
     setTasks((prev) => {
       const updatedFromStage = prev[fromStage].filter((t) => t.id !== task.id);
       const updatedToStage = [...prev[toStage], task];
@@ -62,5 +64,3 @@ const App = () => {
     </DndProvider>
   );
 };
-
-export default App;

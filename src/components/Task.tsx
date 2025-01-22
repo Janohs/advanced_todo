@@ -1,7 +1,15 @@
 import React from 'react';
 import { useDrag } from 'react-dnd';
 
-const Task = ({ task, stage }) => {
+interface TaskProps {
+  task: {
+    name: string;
+    // add other properties of task if needed
+  };
+  stage: string; // or the appropriate type for stage
+}
+
+const Task: React.FC<TaskProps> = ({ task, stage }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: 'task',
     item: { task, stage },
@@ -12,7 +20,7 @@ const Task = ({ task, stage }) => {
 
   return (
     <div
-      ref={drag}
+      ref={drag as unknown as React.Ref<HTMLDivElement>}
       style={{
         opacity: isDragging ? 0.5 : 1,
         cursor: 'move',

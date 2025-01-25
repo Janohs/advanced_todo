@@ -1,66 +1,47 @@
-
 "use client";
-import React, { useState } from 'react';
-import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import Stage from '@/components/Stage';
 
-export default function Home() {
-  const [stages, setStages] = useState(['To Do', 'Doing', 'Done']);
-  const [tasks, setTasks] = useState<{ [key: string]: { id: number; name: string }[] }>({
-    'To Do': [{ id: 1, name: 'Task 1' }, { id: 2, name: 'Task 2' }],
-    Doing: [],
-    Done: [],
-  });
+import { useState, useEffect } from 'react';
+import { TaskFactory } from '@/components/TaskFactory';
+import { TaskComponent } from '@/types/Task';
+import { CreateTaskForm } from '@/components/CreateTaskForm';
+import { TaskList } from '@/components/TaskList';
 
-  const addStage = () => {
-    const newStage = prompt('Enter a new stage name:');
-    if (newStage && !stages.includes(newStage)) {
-      setStages([...stages, newStage]);
-      setTasks({ ...tasks, [newStage]: [] });
+export default function TaskManagementPage() {
+  const [tasks, setTasks] = useState<TaskComponent[]>([]);
+  const factory = TaskFactory.getInstance();
+
+  useEffect(() => {
+    async function loadTasks() {
+      try {
+        // Load root-level tasks
+        const rootTasks = await factory.getRootTasks();
+        setTasks(rootTasks);
+      } catch (error) {
+        console.error('Failed to load tasks', error);
+      }
     }
+    loadTasks();
+  }, []);
+
+  const handleCreateTask = async (title: string, description: string, tags?: string[]) => {
+    const newTask = await factory.createCompositeTask(title, description, undefined, tags);
+    setTasks([...tasks, newTask]);
   };
 
-  const addTask = (stage: string) => {
-    const taskName = prompt(`Enter a task for ${stage}:`);
-    if (taskName) {
-      const newTask = { id: Date.now(), name: taskName };
-      setTasks({ ...tasks, [stage]: [...tasks[stage], newTask] });
-    }
-  };
-
-  const moveTask = (task: { id: number; name: string }, fromStage: string, toStage: string) => {
-    setTasks((prev) => {
-      const updatedFromStage = prev[fromStage].filter((t) => t.id !== task.id);
-      const updatedToStage = [...prev[toStage], task];
-
-      return {
-        ...prev,
-        [fromStage]: updatedFromStage,
-        [toStage]: updatedToStage,
-      };
-    });
+  const handleAddSubtask = async (parentTaskId: string, title: string, description: string) => {
+    const parentTask = await factory.getTaskWithChildren(parentTaskId);
+    const subtask = await factory.createCompositeTask(title, description, parentTaskId);
+    await parentTask.add(subtask);
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className='p-20'>
-        <h1>Trello-like To-Do List</h1>
-        <button onClick={addStage} style={{ marginBottom: '20px' }}>
-          Add Stage
-        </button>
-        <div className="flex gap-2.5">
-          {stages.map((stage) => (
-            <Stage
-              key={stage}
-              stage={stage}
-              tasks={tasks[stage]}
-              onAddTask={() => addTask(stage)}
-              onMoveTask={moveTask}
-            />
-          ))}
-        </div>
-      </div>
-    </DndProvider>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Task Management</h1>
+      <CreateTaskForm onCreateTask={handleCreateTask} />
+      <TaskList
+        tasks={tasks}
+        onAddSubtask={handleAddSubtask}
+      />
+    </div>
   );
-};
+}
